@@ -41,6 +41,10 @@ ADDR_MX_TORQUE_ENABLE      = 24
 ADDR_MX_GOAL_POSITION      = 30
 ADDR_MX_PRESENT_POSITION   = 36
 
+# Address for velocity control
+ADDR_DXL_GOAL_SPEED = 32
+ADDR_DXL_PRESENT_SPEED = 38
+
 # Data Byte Length
 LEN_MX_GOAL_POSITION       = 4
 LEN_MX_PRESENT_POSITION    = 4
@@ -50,7 +54,6 @@ PROTOCOL_VERSION            = 1.0
 
 TORQUE_ENABLE               = 1                 # Value for enabling the torque
 TORQUE_DISABLE              = 0                 # Value for disabling the torque
-
 
 # Initialize PortHandler instance
 # Set the port path
@@ -64,10 +67,6 @@ portHandler = PortHandler(robot.deviceName)
 # Get methods and members of Protocol1PacketHandler or Protocol2PacketHandler
 global packetHandler
 packetHandler = PacketHandler(PROTOCOL_VERSION)
-
-# Initialize GroupSyncWrite instance
-global groupSyncWrite
-groupSyncWrite = GroupSyncWrite(portHandler, packetHandler, ADDR_MX_GOAL_POSITION, LEN_MX_GOAL_POSITION)
 
 # Open port
 if portHandler.openPort():
@@ -83,15 +82,13 @@ else:
     print("Failed to change the baudrate")
     quit()
 
-# Enable motors torque
-for motor in robot.motors:
-    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, motor, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-    else:
-        print("Dynamixel#%d has been successfully connected" % motor)
+dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+if dxl_comm_result != COMM_SUCCESS:
+    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+elif dxl_error != 0:
+    print("%s" % packetHandler.getRxPacketError(dxl_error))
+else:
+    print("Dynamixel#%d has been successfully connected" % robot.motor)
 
 ### FLASK WEBSERVER ###
 from flask import Flask, request
@@ -101,21 +98,29 @@ app = Flask(__name__)
 def get_robot():
     return robot.to_json()
 
-@app.post("/api/robot/move")
-def move():
-    args = request.args
-    goal_position = args.get("position", default="0", type=int)
-    goal_velocity = args.get("velocity", default="0", type=int)
+@app.post("/api/robot/move/<angle>/<velocity>")
+def move(angle: int, velocity: float):
+    #args = request.args
+    #goal_position = args.get("position", default="0", type=int)
+    #goal_velocity = args.get("velocity", default="0", type=int)
+    goal_position = int(angle) * 11.4
+    #velocity = 0 -> maximum velocity; velocity = 1023 -> minimum velocity; We can set 0.5 and multiply it by 1023 to achieve intermediate velocity
+    goal_velocity = velocity * 1023 
     
-    param_goal_position = [DXL_LOBYTE(DXL_LOWORD(goal_position)), DXL_HIBYTE(DXL_LOWORD(goal_position)), DXL_LOBYTE(DXL_HIWORD(goal_position)), DXL_HIBYTE(DXL_HIWORD(goal_position))]
-    dxl_addparam_result = groupSyncWrite.addParam(motor, param_goal_position)
-    if dxl_addparam_result != True:
-        print("[ID:%03d] groupSyncWrite addparam failed" % motor)
-        quit()
-    if dxl_addparam_result != True:
-        print("[ID:%03d] groupSyncWrite addparam failed" % motor)
-        quit()
-        
+    # Write goal position and velocity
+    dxl_comm_result_position, dxl_error_position = packetHandler.write2ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION, goal_position)
+    dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write2ByteTxRx(portHandler, robot.motor, ADDR_DXL_GOAL_SPEED, int(goal_velocity))
+
+    if dxl_comm_result_velocity != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result_velocity))
+    elif dxl_error_velocity != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error_velocity))
+    
+    if dxl_comm_result_position != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result_position))
+    elif dxl_error_position != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error_position))
+
     return {"status": "ok"}
 
 if __name__ == '__main__':

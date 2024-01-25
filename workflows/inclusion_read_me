@@ -1,0 +1,22 @@
+Order:
+user -> kip
+kip -> user
+user -> gimi
+gimi -> kip
+kip -> user
+user -> kip
+kip -> gimi
+gimi -> user
+user -> gimi
+gimi -> user
+user -> kip
+kip -> gimi
+gimi -> kip
+kip -> user
+user -> gimi
+gimi -> user
+user -> kip
+kip -> gimi
+gimi -> user
+user -> kip
+kip -> gimi

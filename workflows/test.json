@@ -1,0 +1,32 @@
+{
+    "id": "test",
+    "configs": [
+        {
+        "num_interations": 5,
+        "options": {
+            "gimi": [
+            {"to": "user", "weight": 1},
+            {"to": "kip", "weight": 10}
+            ],
+            "kip": [
+            {"to": "user", "weight": 1},
+            {"to": "gimi", "weight": 10}
+            ]
+        }
+        },
+        {
+        "num_interations": 5,
+        "options": {
+            "gimi": [
+            {"to": "user", "weight": 10},
+            {"to": "kip", "weight": 1}
+            ],
+            "kip": [
+            {"to": "user", "weight": 10},
+            {"to": "gimi", "weight": 1}
+            ]
+        }
+        }
+    ]
+}
+

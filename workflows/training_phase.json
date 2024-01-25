@@ -1,0 +1,19 @@
+{
+    "id": "training",
+    "configs": [
+        {
+        "num_interations": 8,
+        "options": {
+            "gimi": [
+            {"to": "user", "weight": 1},
+            {"to": "kip", "weight": 1}
+            ],
+            "kip": [
+            {"to": "user", "weight": 1},
+            {"to": "gimi", "weight": 1}
+            ]
+        }
+        }
+    ]
+}
+
