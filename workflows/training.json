@@ -5,11 +5,11 @@
         "num_interations": 8,
         "options": {
             "gimi": [
-            {"to": "user", "weight": 1},
+            {"to": "user", "weight": 2},
             {"to": "kip", "weight": 1}
             ],
             "kip": [
-            {"to": "user", "weight": 1},
+            {"to": "user", "weight":2},
             {"to": "gimi", "weight": 1}
             ]
         }
