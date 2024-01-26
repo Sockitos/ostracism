@@ -38,19 +38,22 @@ robot = Robot(
 
 # Control table address
 ADDR_MX_TORQUE_ENABLE      = 24               
-ADDR_MX_GOAL_POSITION      = 30
+ADDR_MX_GOAL_POSITION      = 116
 ADDR_MX_PRESENT_POSITION   = 36
 
 # Address for velocity control
 ADDR_DXL_GOAL_SPEED = 32
 ADDR_DXL_PRESENT_SPEED = 38
+DXL_MOVING_STATUS_THRESHOLD = 20
+ADDR_MX_PROFILE_ACCELERATION = 108
+ADDR_MX_PROFILE_VELOCITY = 1
 
 # Data Byte Length
 LEN_MX_GOAL_POSITION       = 4
 LEN_MX_PRESENT_POSITION    = 4
 
 # Protocol version
-PROTOCOL_VERSION            = 1.0       
+PROTOCOL_VERSION            = 2.0       
 
 TORQUE_ENABLE               = 1                 # Value for enabling the torque
 TORQUE_DISABLE              = 0                 # Value for disabling the torque
@@ -82,13 +85,18 @@ else:
     print("Failed to change the baudrate")
     quit()
 
-dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+    
+dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_DISABLE)
 if dxl_comm_result != COMM_SUCCESS:
     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
 elif dxl_error != 0:
     print("%s" % packetHandler.getRxPacketError(dxl_error))
 else:
     print("Dynamixel#%d has been successfully connected" % robot.motor)
+
+profile_velocity  = 10
+
+dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_PROFILE_VELOCITY, profile_velocity)
 
 ### FLASK WEBSERVER ###
 from flask import Flask, request
@@ -98,24 +106,13 @@ app = Flask(__name__)
 def get_robot():
     return robot.to_json()
 
-@app.post("/api/robot/move/<angle>/<velocity>")
-def move(angle: int, velocity: float):
-    #args = request.args
-    #goal_position = args.get("position", default="0", type=int)
-    #goal_velocity = args.get("velocity", default="0", type=int)
-    goal_position = int(angle) * 11.4
-    #velocity = 0 -> maximum velocity; velocity = 1023 -> minimum velocity; We can set 0.5 and multiply it by 1023 to achieve intermediate velocity
-    goal_velocity = velocity * 1023 
+@app.post("/api/robot/move/<position>")
+def move(position: int):
+    goal_position = int(position)
     
-    # Write goal position and velocity
-    dxl_comm_result_position, dxl_error_position = packetHandler.write2ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION, goal_position)
-    dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write2ByteTxRx(portHandler, robot.motor, ADDR_DXL_GOAL_SPEED, int(goal_velocity))
-
-    if dxl_comm_result_velocity != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result_velocity))
-    elif dxl_error_velocity != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error_velocity))
-    
+    # Write goal position 
+    dxl_comm_result_position, dxl_error_position = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION, goal_position)
+    print(goal_position)
     if dxl_comm_result_position != COMM_SUCCESS:
         print("%s" % packetHandler.getTxRxResult(dxl_comm_result_position))
     elif dxl_error_position != 0:

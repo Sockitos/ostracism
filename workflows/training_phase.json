@@ -1,5 +1,5 @@
 {
-    "id": "test_training",
+    "id": "training_phase",
     "configs": [
         {
             "num_interations": 3,
