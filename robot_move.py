@@ -46,7 +46,9 @@ ADDR_DXL_GOAL_SPEED = 32
 ADDR_DXL_PRESENT_SPEED = 38
 DXL_MOVING_STATUS_THRESHOLD = 20
 ADDR_MX_PROFILE_ACCELERATION = 108
-ADDR_MX_PROFILE_VELOCITY = 1
+ADDR_MX_PROFILE_VELOCITY = 112
+
+ADDR_OPERATING_MODE = 11
 
 # Data Byte Length
 LEN_MX_GOAL_POSITION       = 4
@@ -98,6 +100,12 @@ profile_velocity  = 10
 
 dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_PROFILE_VELOCITY, profile_velocity)
 
+# Multi Turn Mode -> TER TORQ OF AQUI
+dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_OPERATING_MODE, 4)
+if dxl_comm_result != COMM_SUCCESS:
+    print(f"Error mode control: {packetHandler.getTxRxResult(dxl_comm_result)}")
+    quit()
+    
 ### FLASK WEBSERVER ###
 from flask import Flask, request
 app = Flask(__name__)
@@ -106,10 +114,11 @@ app = Flask(__name__)
 def get_robot():
     return robot.to_json()
 
-@app.post("/api/robot/move/<position>")
-def move(position: int):
-    goal_position = int(position)
-    
+@app.post("/api/robot/move/<angle>")
+def move(angle: int):
+    current_position, _, _ = packetHandler.read4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION)
+    goal_position = current_position + int((int(angle)/ 360) * 4096)
+     
     # Write goal position 
     dxl_comm_result_position, dxl_error_position = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION, goal_position)
     print(goal_position)

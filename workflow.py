@@ -62,9 +62,13 @@ USER = 'user'
 GIMI = 'gimi'
 KIP = 'kip'
 
-TO_USER = 6130
-TO_GIMI = 3430
-TO_KIP = 4642 
+#Change to +90, -90, +135, -135
+GIMI_TO_USER = -135
+GIMI_TO_KIP = 90
+KIP_TO_USER = 135
+KIP_TO_GIMI = -90
+USER_TO_GIMI = 135
+USER_TO_KIP = -135
 
 ball_from = USER
 ball_to= ball_from
@@ -101,33 +105,33 @@ for config in workflow.configs:
         if ball_from == USER and ball_to == KIP:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/user_to_kip_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/user_to_kip_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_KIP}')
-            log_entry = f"{datetime.now()} - {USER} to {KIP}: {KIP_ADDRESS}/robot/animations/user_to_kip_kip, {GIMI_ADDRESS}/robot/animations/user_to_kip_gimi, {ARM_ADDRESS}/robot/move/{TO_KIP}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{USER_TO_KIP}')
+            log_entry = f"{datetime.now()} - {USER} to {KIP}: {KIP_ADDRESS}/robot/animations/user_to_kip_kip, {GIMI_ADDRESS}/robot/animations/user_to_kip_gimi, {ARM_ADDRESS}/robot/move/{USER_TO_KIP}"
         elif ball_from == USER and ball_to == GIMI:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/user_to_gimi_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/user_to_gimi_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_GIMI}')
-            log_entry = f"{datetime.now()} - {USER} to {GIMI}: {KIP_ADDRESS}/robot/animations/user_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/user_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{TO_GIMI}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{USER_TO_GIMI}')
+            log_entry = f"{datetime.now()} - {USER} to {GIMI}: {KIP_ADDRESS}/robot/animations/user_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/user_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{USER_TO_GIMI}"
         elif ball_from == KIP and ball_to == USER:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/kip_to_user_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/kip_to_user_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_USER}')
-            log_entry = f"{datetime.now()} - {KIP} to {USER}: {KIP_ADDRESS}/robot/animations/kip_to_user_kip, {GIMI_ADDRESS}/robot/animations/kip_to_user_gimi, {ARM_ADDRESS}/robot/move/{TO_USER}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{KIP_TO_USER}')
+            log_entry = f"{datetime.now()} - {KIP} to {USER}: {KIP_ADDRESS}/robot/animations/kip_to_user_kip, {GIMI_ADDRESS}/robot/animations/kip_to_user_gimi, {ARM_ADDRESS}/robot/move/{KIP_TO_USER}"
         elif ball_from == KIP and ball_to == GIMI:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/kip_to_gimi_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/kip_to_gimi_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_GIMI}')
-            log_entry = f"{datetime.now()} - {KIP} to {GIMI}: {KIP_ADDRESS}/robot/animations/kip_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/kip_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{TO_GIMI}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{KIP_TO_GIMI}')
+            log_entry = f"{datetime.now()} - {KIP} to {GIMI}: {KIP_ADDRESS}/robot/animations/kip_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/kip_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{KIP_TO_GIMI}"
         elif ball_from == GIMI and ball_to == USER:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/gimi_to_user_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/gimi_to_user_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_USER}')
-            log_entry = f"{datetime.now()} - {GIMI} to {USER}: {KIP_ADDRESS}/robot/animations/gimi_to_user_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_user_gimi, {ARM_ADDRESS}/robot/move/{TO_USER}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{GIMI_TO_USER}')
+            log_entry = f"{datetime.now()} - {GIMI} to {USER}: {KIP_ADDRESS}/robot/animations/gimi_to_user_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_user_gimi, {ARM_ADDRESS}/robot/move/{GIMI_TO_USER}"
         elif ball_from == GIMI and ball_to == KIP:
             requests.post(f'http://{KIP_ADDRESS}/robot/animations/gimi_to_kip_kip')
             requests.post(f'http://{GIMI_ADDRESS}/robot/animations/gimi_to_kip_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{TO_KIP}')
-            log_entry = f"{datetime.now()} - {GIMI} to {KIP}: {KIP_ADDRESS}/robot/animations/gimi_to_kip_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_kip_gimi, {ARM_ADDRESS}/robot/move/{TO_KIP}"
+            requests.post(f'http://{ARM_ADDRESS}/robot/move/{GIMI_TO_KIP}')
+            log_entry = f"{datetime.now()} - {GIMI} to {KIP}: {KIP_ADDRESS}/robot/animations/gimi_to_kip_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_kip_gimi, {ARM_ADDRESS}/robot/move/{GIMI_TO_KIP}"
             
         logs.append(log_entry)
             
