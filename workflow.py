@@ -3,6 +3,7 @@ from typing import Dict, List
 from datetime import datetime
 import sys
 import requests
+import time
 
 class MoveOption: 
     def __init__(
@@ -85,7 +86,9 @@ KIP_TO_USER = 135
 KIP_TO_GIMI = -90
 USER_TO_GIMI = 135
 USER_TO_KIP = -135
-#ARM_INIT_POSITION = COMPLETAR VALOR
+
+#CHANGE VALUE
+ARM_INIT_POSITION = 0
 
 
 ball_from = USER
@@ -103,19 +106,22 @@ workflow = next((workflow for workflow in workflows if workflow.id == curr_workf
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 log_file_name = f"logs_{curr_workflow_id}_{timestamp}.txt"
 
-# Initialize
-requests.post(f'http://{KIP_ADDRESS}/robot/animations/pre_start_kip')
-requests.post(f'http://{GIMI_ADDRESS}/robot/animations/pre_start_gimi')
-#requests.post(f'http://{ARM_ADDRESS}/robot/init/{ARM_INIT_POSITION}')
-requests.post(f'http://{KIP_ADDRESS}/robot/animations/start_kip')
-requests.post(f'http://{GIMI_ADDRESS}/robot/animations/start_gimi')
-
+def initialize(animation_kip, animation_gimi, position_arm):
+    requests.post(f'http://{KIP_ADDRESS}/robot/animations/{animation_kip}')
+    requests.post(f'http://{GIMI_ADDRESS}/robot/animations/{animation_gimi}')
+    requests.post(f'http://{ARM_ADDRESS}/robot/init/{position_arm}')
+    
 def makeRequest(ball_from, ball_to, animation_kip, animation_gimi, angle_arm):
     requests.post(f'http://{KIP_ADDRESS}/robot/animations/{animation_kip}')
     requests.post(f'http://{GIMI_ADDRESS}/robot/animations/{animation_gimi}')
     requests.post(f'http://{ARM_ADDRESS}/robot/move/{angle_arm}')
     log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
     logs.append(log_entry)
+
+# Initialize
+initialize("pre_start_kip","pre_start_gimi", ARM_INIT_POSITION)
+time.sleep(3)
+initialize("start_kip","start_gimi", ARM_INIT_POSITION)
 
 for config in workflow.configs:
     for i in range(config.num_interations):
