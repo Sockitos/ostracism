@@ -110,6 +110,25 @@ app = Flask(__name__)
 def get_robot():
     return robot.to_json()
 
+#Move to the given position
+@app.post("/api/robot/init/<position>")
+def init(position: int):
+    goal_position = int(position)
+     
+    # Write goal position 
+    dxl_comm_result_position, dxl_error_position = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION, goal_position)
+    print(goal_position)
+    if dxl_comm_result_position != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result_position))
+    elif dxl_error_position != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error_position))
+
+    return {"status": "ok"}
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
+    
+#Calculate the goal position according to the angle it has to make and based on the position it is in
 @app.post("/api/robot/move/<angle>")
 def move(angle: int):
     current_position, _, _ = packetHandler.read4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION)

@@ -39,6 +39,22 @@ curr_workflow_id = sys.argv[1]
 import os
 import json
 
+if os.name == 'nt':
+    import msvcrt
+    def getch():
+        return msvcrt.getch().decode()
+else:
+    import sys, tty, termios
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    def getch():
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
 for filename in os.listdir(workflow_folder):
     if filename.endswith(".json"):
         file_path = os.path.join(workflow_folder, filename)
@@ -69,6 +85,8 @@ KIP_TO_USER = 135
 KIP_TO_GIMI = -90
 USER_TO_GIMI = 135
 USER_TO_KIP = -135
+#ARM_INIT_POSITION = COMPLETAR VALOR
+
 
 ball_from = USER
 ball_to= ball_from
@@ -84,11 +102,26 @@ workflow = next((workflow for workflow in workflows if workflow.id == curr_workf
 # Create a timestamp for the log file name
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 log_file_name = f"logs_{curr_workflow_id}_{timestamp}.txt"
-#ADD PRE-START AND START?
+
+# Initialize
+requests.post(f'http://{KIP_ADDRESS}/robot/animations/pre_start_kip')
+requests.post(f'http://{GIMI_ADDRESS}/robot/animations/pre_start_gimi')
+#requests.post(f'http://{ARM_ADDRESS}/robot/init/{ARM_INIT_POSITION}')
+requests.post(f'http://{KIP_ADDRESS}/robot/animations/start_kip')
+requests.post(f'http://{GIMI_ADDRESS}/robot/animations/start_gimi')
+
+def makeRequest(ball_from, ball_to, animation_kip, animation_gimi, angle_arm):
+    requests.post(f'http://{KIP_ADDRESS}/robot/animations/{animation_kip}')
+    requests.post(f'http://{GIMI_ADDRESS}/robot/animations/{animation_gimi}')
+    requests.post(f'http://{ARM_ADDRESS}/robot/move/{angle_arm}')
+    log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
+    logs.append(log_entry)
+
 for config in workflow.configs:
     for i in range(config.num_interations):
         if ball_from == USER:
-            inp = input("Choose 0 (KIP) or 1 (GIMI): ")
+            print("Choose 0 (KIP) or 1 (GIMI): ")
+            inp = getch()
             if inp == "0":
                 print("You chose KIP")
                 ball_to = KIP
@@ -97,43 +130,22 @@ for config in workflow.configs:
                 ball_to = GIMI
                 
         else:
-            #print(config.options)
             options = config.options[ball_from]
             chosen_option = random.choices(options, weights=[option["weight"] for option in options], k=1)[0]
             ball_to = chosen_option["to"]
             
         if ball_from == USER and ball_to == KIP:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/user_to_kip_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/user_to_kip_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{USER_TO_KIP}')
-            log_entry = f"{datetime.now()} - {USER} to {KIP}: {KIP_ADDRESS}/robot/animations/user_to_kip_kip, {GIMI_ADDRESS}/robot/animations/user_to_kip_gimi, {ARM_ADDRESS}/robot/move/{USER_TO_KIP}"
+            makeRequest(ball_from,ball_to,"user_to_kip_kip","user_to_kip_gimi",USER_TO_KIP)
         elif ball_from == USER and ball_to == GIMI:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/user_to_gimi_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/user_to_gimi_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{USER_TO_GIMI}')
-            log_entry = f"{datetime.now()} - {USER} to {GIMI}: {KIP_ADDRESS}/robot/animations/user_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/user_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{USER_TO_GIMI}"
+            makeRequest(ball_from,ball_to,"user_to_gimi_kip","user_to_gimi_gimi",USER_TO_GIMI)
         elif ball_from == KIP and ball_to == USER:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/kip_to_user_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/kip_to_user_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{KIP_TO_USER}')
-            log_entry = f"{datetime.now()} - {KIP} to {USER}: {KIP_ADDRESS}/robot/animations/kip_to_user_kip, {GIMI_ADDRESS}/robot/animations/kip_to_user_gimi, {ARM_ADDRESS}/robot/move/{KIP_TO_USER}"
+            makeRequest(ball_from,ball_to,"kip_to_user_kip","kip_to_user_gimi",KIP_TO_USER)
         elif ball_from == KIP and ball_to == GIMI:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/kip_to_gimi_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/kip_to_gimi_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{KIP_TO_GIMI}')
-            log_entry = f"{datetime.now()} - {KIP} to {GIMI}: {KIP_ADDRESS}/robot/animations/kip_to_gimi_kip, {GIMI_ADDRESS}/robot/animations/kip_to_gimi_gimi, {ARM_ADDRESS}/robot/move/{KIP_TO_GIMI}"
+            makeRequest(ball_from,ball_to,"kip_to_gimi_kip","kip_to_gimi_gimi",KIP_TO_GIMI)
         elif ball_from == GIMI and ball_to == USER:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/gimi_to_user_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/gimi_to_user_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{GIMI_TO_USER}')
-            log_entry = f"{datetime.now()} - {GIMI} to {USER}: {KIP_ADDRESS}/robot/animations/gimi_to_user_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_user_gimi, {ARM_ADDRESS}/robot/move/{GIMI_TO_USER}"
+            makeRequest(ball_from,ball_to,"gimi_to_user_kip","gimi_to_user_gimi",GIMI_TO_USER)
         elif ball_from == GIMI and ball_to == KIP:
-            requests.post(f'http://{KIP_ADDRESS}/robot/animations/gimi_to_kip_kip')
-            requests.post(f'http://{GIMI_ADDRESS}/robot/animations/gimi_to_kip_gimi')
-            requests.post(f'http://{ARM_ADDRESS}/robot/move/{GIMI_TO_KIP}')
-            log_entry = f"{datetime.now()} - {GIMI} to {KIP}: {KIP_ADDRESS}/robot/animations/gimi_to_kip_kip, {GIMI_ADDRESS}/robot/animations/gimi_to_kip_gimi, {ARM_ADDRESS}/robot/move/{GIMI_TO_KIP}"
-            
-        logs.append(log_entry)
+            makeRequest(ball_from,ball_to,"gimi_to_kip_kip","gimi_to_kip_gimi",GIMI_TO_KIP)
             
         ball_from = ball_to
     
