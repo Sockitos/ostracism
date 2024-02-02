@@ -84,7 +84,7 @@ workflow = next((workflow for workflow in workflows if workflow.id == curr_workf
 # Create a timestamp for the log file name
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 log_file_name = f"logs_{curr_workflow_id}_{timestamp}.txt"
-
+#ADD PRE-START AND START?
 for config in workflow.configs:
     for i in range(config.num_interations):
         if ball_from == USER:

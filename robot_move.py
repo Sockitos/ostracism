@@ -37,15 +37,10 @@ robot = Robot(
     )
 
 # Control table address
-ADDR_MX_TORQUE_ENABLE      = 24               
+ADDR_MX_TORQUE_ENABLE      = 64               
 ADDR_MX_GOAL_POSITION      = 116
-ADDR_MX_PRESENT_POSITION   = 36
 
 # Address for velocity control
-ADDR_DXL_GOAL_SPEED = 32
-ADDR_DXL_PRESENT_SPEED = 38
-DXL_MOVING_STATUS_THRESHOLD = 20
-ADDR_MX_PROFILE_ACCELERATION = 108
 ADDR_MX_PROFILE_VELOCITY = 112
 
 ADDR_OPERATING_MODE = 11
@@ -88,7 +83,7 @@ else:
     quit()
 
     
-dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_DISABLE)
+dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
 if dxl_comm_result != COMM_SUCCESS:
     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
 elif dxl_error != 0:
@@ -96,15 +91,16 @@ elif dxl_error != 0:
 else:
     print("Dynamixel#%d has been successfully connected" % robot.motor)
 
-profile_velocity  = 10
+profile_velocity  = 15
 
 dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_PROFILE_VELOCITY, profile_velocity)
 
-# Multi Turn Mode -> TER TORQ OF AQUI
+# Multi Turn Mode 
 dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_OPERATING_MODE, 4)
 if dxl_comm_result != COMM_SUCCESS:
     print(f"Error mode control: {packetHandler.getTxRxResult(dxl_comm_result)}")
     quit()
+
     
 ### FLASK WEBSERVER ###
 from flask import Flask, request
