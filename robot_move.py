@@ -39,10 +39,7 @@ robot = Robot(
 # Control table address
 ADDR_MX_TORQUE_ENABLE      = 64               
 ADDR_MX_GOAL_POSITION      = 116
-
-# Address for velocity control
 ADDR_MX_PROFILE_VELOCITY = 112
-
 ADDR_OPERATING_MODE = 11
 
 # Data Byte Length
@@ -55,12 +52,14 @@ PROTOCOL_VERSION            = 2.0
 TORQUE_ENABLE               = 1                 # Value for enabling the torque
 TORQUE_DISABLE              = 0                 # Value for disabling the torque
 
+PROFILE_VELOCITY            = 1200              # Value for setting the velocity
+MULTI_TURN_OPERATING_MODE   = 4                 # Value for setting the operating mode to Multi-turn
+
 # Initialize PortHandler instance
 # Set the port path
 # Get methods and members of PortHandlerLinux or PortHandlerWindows
 global portHandler
 portHandler = PortHandler(robot.deviceName)
-
 
 # Initialize PacketHandler instance
 # Set the protocol version
@@ -82,7 +81,7 @@ else:
     print("Failed to change the baudrate")
     quit()
 
-    
+# Enable motor torque
 dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
 if dxl_comm_result != COMM_SUCCESS:
     print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
@@ -91,26 +90,25 @@ elif dxl_error != 0:
 else:
     print("Dynamixel#%d has been successfully connected" % robot.motor)
 
-profile_velocity  = 15
+# Set velocity
+dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_PROFILE_VELOCITY, PROFILE_VELOCITY)
 
-dxl_comm_result_velocity, dxl_error_velocity = packetHandler.write4ByteTxRx(portHandler, robot.motor, ADDR_MX_PROFILE_VELOCITY, profile_velocity)
-
-# Multi Turn Mode 
-dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_OPERATING_MODE, 4)
+# Set operating mode to Multi-turn 
+dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, robot.motor, ADDR_OPERATING_MODE, MULTI_TURN_OPERATING_MODE)
 if dxl_comm_result != COMM_SUCCESS:
     print(f"Error mode control: {packetHandler.getTxRxResult(dxl_comm_result)}")
     quit()
-
     
 ### FLASK WEBSERVER ###
 from flask import Flask, request
 app = Flask(__name__)
 
+# Get robot information
 @app.get("/api/robot")
 def get_robot():
     return robot.to_json()
 
-#Move to the given position
+# Move to the given position
 @app.post("/api/robot/init/<position>")
 def init(position: int):
     goal_position = int(position)
@@ -124,11 +122,8 @@ def init(position: int):
         print("%s" % packetHandler.getRxPacketError(dxl_error_position))
 
     return {"status": "ok"}
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
     
-#Calculate the goal position according to the angle it has to make and based on the position it is in
+# Calculate the goal position according to the angle it has to make and based on the position it is in
 @app.post("/api/robot/move/<angle>")
 def move(angle: int):
     current_position, _, _ = packetHandler.read4ByteTxRx(portHandler, robot.motor, ADDR_MX_GOAL_POSITION)

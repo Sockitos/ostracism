@@ -1,9 +1,5 @@
-import random
+### Define workflow ###
 from typing import Dict, List
-from datetime import datetime
-import sys
-import requests
-import time
 
 class MoveOption: 
     def __init__(
@@ -32,35 +28,17 @@ class Workflow:
         self.id = id
         self.configs = configs
 
-### Initialize workflow #############################################################################
-workflows = []
-workflow_folder = "workflows/"
-curr_workflow_id = sys.argv[1]
-
+### Preload workflows ###
 import os
 import json
 
-if os.name == 'nt':
-    import msvcrt
-    def getch():
-        return msvcrt.getch().decode()
-else:
-    import sys, tty, termios
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    def getch():
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
+workflows = []
+workflow_folder = "workflows/"
 
 for filename in os.listdir(workflow_folder):
     if filename.endswith(".json"):
         file_path = os.path.join(workflow_folder, filename)
         with open(file_path, "r") as file:
-            
             workflow_data = json.load(file)
             workflow = Workflow(
                 id=workflow_data.get('id'),
@@ -70,7 +48,17 @@ for filename in os.listdir(workflow_folder):
                 ) for config in workflow_data.get('configs')]
             )
             workflows.append(workflow)
-            
+
+### Initialize workflow ###
+import sys
+import datetime
+import requests
+import time
+import random
+
+curr_workflow_id = sys.argv[1]
+
+# Robots addresses            
 KIP_ADDRESS = 'kip.local'
 GIMI_ADDRESS = 'gimi.local'
 ARM_ADDRESS = 'arm.local'
@@ -79,7 +67,7 @@ USER = 'user'
 GIMI = 'gimi'
 KIP = 'kip'
 
-#Change to +90, -90, +135, -135
+# ARM position change to +90, -90, +135, -135
 GIMI_TO_USER = -135
 GIMI_TO_KIP = 90
 KIP_TO_USER = 135
@@ -87,19 +75,19 @@ KIP_TO_GIMI = -90
 USER_TO_GIMI = 135
 USER_TO_KIP = -135
 
-#CHANGE VALUE
+# ARM initial position
 ARM_INIT_POSITION = 0
-
-
-ball_from = USER
-ball_to= ball_from
 
 # Create a folder for logs
 logs_folder = "logs/"
 os.makedirs(logs_folder, exist_ok=True)
 logs = []
 
-#Find the selected workflow based on the provided ID
+
+ball_from = USER
+ball_to= ball_from
+
+# Find the selected workflow based on the provided ID
 workflow = next((workflow for workflow in workflows if workflow.id == curr_workflow_id), None)
 
 # Create a timestamp for the log file name
@@ -118,10 +106,27 @@ def makeRequest(ball_from, ball_to, animation_kip, animation_gimi, angle_arm):
     log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
     logs.append(log_entry)
 
-# Initialize
+# Initialize robots
 initialize("pre_start_kip","pre_start_gimi", ARM_INIT_POSITION)
 time.sleep(3)
 initialize("start_kip","start_gimi", ARM_INIT_POSITION)
+
+# Define getch function
+if os.name == 'nt':
+    import msvcrt
+    def getch():
+        return msvcrt.getch().decode()
+else:
+    import sys, tty, termios
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    def getch():
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
 
 for config in workflow.configs:
     for i in range(config.num_interations):

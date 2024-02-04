@@ -19,7 +19,7 @@ class Animation:
             "duration": self.duration,
         }
         
-### Define robot ####
+### Define robot ###
 from typing import List
 
 class Robot:
@@ -46,8 +46,7 @@ class Robot:
             "animations": [animation.to_json() for animation in self.animations],
         }
 
-### Initialize animation #############################################################################
-
+### Preload animations ###
 import os
 import json
 
@@ -99,7 +98,6 @@ TORQUE_DISABLE              = 0                 # Value for disabling the torque
 global portHandler
 portHandler = PortHandler(robot.deviceName)
 
-
 # Initialize PacketHandler instance
 # Set the protocol version
 # Get methods and members of Protocol1PacketHandler or Protocol2PacketHandler
@@ -140,14 +138,17 @@ import sched, time
 from flask import Flask
 app = Flask(__name__)
 
+# Get robot information
 @app.get("/api/robot")
 def get_robot():
     return robot.to_json()
 
+# Get robot animations
 @app.get("/api/robot/animations")
 def get_animations():
     return [animation.to_json() for animation in robot.animations]
 
+# Play animation
 @app.post("/api/robot/animations/<animation_id>")
 def animate(animation_id: str):
     animation = next((animation for animation in robot.animations if animation.id == animation_id), None)
