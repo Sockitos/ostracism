@@ -51,7 +51,7 @@ for filename in os.listdir(workflow_folder):
 
 ### Initialize workflow ###
 import sys
-import datetime
+from datetime import datetime
 import requests
 import time
 import random
@@ -59,9 +59,9 @@ import random
 curr_workflow_id = sys.argv[1]
 
 # Robots addresses            
-KIP_ADDRESS = 'kip.local'
-GIMI_ADDRESS = 'gimi.local'
-ARM_ADDRESS = 'arm.local'
+KIP_ADDRESS = '192.168.4.50:5000'
+GIMI_ADDRESS = '192.168.4.99:5000'
+ARM_ADDRESS = '192.168.4.114:5000'
 
 USER = 'user'
 GIMI = 'gimi'
@@ -76,7 +76,7 @@ USER_TO_GIMI = 135
 USER_TO_KIP = -135
 
 # ARM initial position
-ARM_INIT_POSITION = 0
+ARM_INIT_POSITION = 1900
 
 # Create a folder for logs
 logs_folder = "logs/"
@@ -94,21 +94,49 @@ workflow = next((workflow for workflow in workflows if workflow.id == curr_workf
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 log_file_name = f"logs_{curr_workflow_id}_{timestamp}.txt"
 
+#def initialize(animation_kip, animation_gimi, position_arm):
+#    requests.post(f'http://{KIP_ADDRESS}/api/robot/animations/{animation_kip}')
+#    requests.post(f'http://{GIMI_ADDRESS}/api/robot/animations/{animation_gimi}')
+#    requests.post(f'http://{ARM_ADDRESS}/api/robot/init/{position_arm}')
+
+import concurrent.futures
+
 def initialize(animation_kip, animation_gimi, position_arm):
-    requests.post(f'http://{KIP_ADDRESS}/robot/animations/{animation_kip}')
-    requests.post(f'http://{GIMI_ADDRESS}/robot/animations/{animation_gimi}')
-    requests.post(f'http://{ARM_ADDRESS}/robot/init/{position_arm}')
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(requests.post, f'http://{KIP_ADDRESS}/api/robot/animations/{animation_kip}'),
+            executor.submit(requests.post, f'http://{GIMI_ADDRESS}/api/robot/animations/{animation_gimi}'),
+            executor.submit(requests.post, f'http://{ARM_ADDRESS}/api/robot/init/{position_arm}')
+        ]
+        concurrent.futures.wait(futures)
     
+
+#def makeRequest(ball_from, ball_to, animation_kip, animation_gimi, angle_arm):
+#    requests.post(f'http://{KIP_ADDRESS}/api/robot/animations/{animation_kip}')
+#    requests.post(f'http://{GIMI_ADDRESS}/api/robot/animations/{animation_gimi}')
+#    #requests.post(f'http://{ARM_ADDRESS}/api/robot/move/{angle_arm}')
+#    log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
+#    logs.append(log_entry)
+#    #print(ball_to + " - " + ball_from)
+
 def makeRequest(ball_from, ball_to, animation_kip, animation_gimi, angle_arm):
-    requests.post(f'http://{KIP_ADDRESS}/robot/animations/{animation_kip}')
-    requests.post(f'http://{GIMI_ADDRESS}/robot/animations/{animation_gimi}')
-    requests.post(f'http://{ARM_ADDRESS}/robot/move/{angle_arm}')
-    log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
-    logs.append(log_entry)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submeter as chamadas HTTP para execução simultânea
+        futures = [
+            executor.submit(requests.post, f'http://{KIP_ADDRESS}/api/robot/animations/{animation_kip}'),
+            executor.submit(requests.post, f'http://{GIMI_ADDRESS}/api/robot/animations/{animation_gimi}'),
+            executor.submit(requests.post, f'http://{ARM_ADDRESS}/api/robot/move/{angle_arm}')
+        ]
+        
+        concurrent.futures.wait(futures)
+        time.sleep(2)
+        log_entry = f"{datetime.now()} - {ball_from} to {ball_to}: {KIP_ADDRESS}/robot/animations/{animation_kip}, {GIMI_ADDRESS}/robot/animations/{animation_gimi}, {ARM_ADDRESS}/robot/move/{angle_arm}"
+        logs.append(log_entry)
+
 
 # Initialize robots
 initialize("pre_start_kip","pre_start_gimi", ARM_INIT_POSITION)
-time.sleep(3)
+time.sleep(2)
 initialize("start_kip","start_gimi", ARM_INIT_POSITION)
 
 # Define getch function

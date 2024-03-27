@@ -1,0 +1,91 @@
+{
+    "id": "training",
+    "configs": [
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        },
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "kip", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "gimi", "weight": 1}
+                ]
+            }
+        },{
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        },
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "kip", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "gimi", "weight": 1}
+                ]
+            }
+        },
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        },
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        },
+        {
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        },{
+            "num_interations": 1,
+            "options": {
+                "gimi": [
+                    {"to": "user", "weight": 1}  
+                ],
+                "kip": [
+                    {"to": "user", "weight": 1}
+                ]
+            }
+        }
+    ]
+}

@@ -52,7 +52,7 @@ PROTOCOL_VERSION            = 2.0
 TORQUE_ENABLE               = 1                 # Value for enabling the torque
 TORQUE_DISABLE              = 0                 # Value for disabling the torque
 
-PROFILE_VELOCITY            = 1200              # Value for setting the velocity
+PROFILE_VELOCITY            = 30              # Value for setting the velocity
 MULTI_TURN_OPERATING_MODE   = 4                 # Value for setting the operating mode to Multi-turn
 
 # Initialize PortHandler instance
